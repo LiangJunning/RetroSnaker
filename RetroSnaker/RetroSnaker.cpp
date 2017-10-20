@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <iostream>
+//#include <wchar.h>
 
 using namespace std;
 
@@ -30,12 +31,23 @@ int main()
 		//Sleep(5);
 		system("cls");
 	}*/
-	HANDLE hWnd= GetStdHandle(STD_OUTPUT_HANDLE);
+	/*HANDLE hWnd= GetStdHandle(STD_OUTPUT_HANDLE);
 	printf("a\nb\ncdefgg\n\n\n");
 	gotoxy(hWnd,2,2);
 	putchar('x');
 	getchar();
-	CloseHandle(hWnd);
+	CloseHandle(hWnd);*/
+
+	GSettings Settings =
+	{
+		20,
+		30,
+		1,
+		'=',
+		'0',
+		5
+	};
+	play(Settings);
     return 0;
 }
 

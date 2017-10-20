@@ -1,5 +1,7 @@
 #pragma once
 
+using namespace std;
+
 typedef struct COOR_t 
 {
 	int x;
@@ -18,21 +20,22 @@ typedef struct SNAKE_t
 	SPU pos;
 }SNAKE;
 
-struct GSettings 
-{//Current Settings
+typedef struct GSettings_t
+{//Game Settings
 	int a;
 	int b;
 	int feq;//Frequency     Unit:feq t/s
 	char border;
 	char snakeu;//Snake Unit
-};
+	int init_snake_len;//Initial Snake Lengh
+}GSettings;
 
-struct CuState
+typedef struct CuState_t
 {
 	int time;//Unit:s
 	int score;
 	int dir;//Direction
-};
+}CuState;
 
 enum eDirection
 {
@@ -58,10 +61,12 @@ void TrunDown();
 void TurnUp();
 
 //输出
-static void output(char* map);
+static void output(char * map, GSettings Settings, CuState State);
 
 //初始化map
-void init_map(char* map, int a, int b);
+void init_map(char** map, int a, int b, GSettings Settings);
 
 //跳转map
-inline char* goto_map(char* map, int x, int y);
+inline char* goto_map(int x, int y, char* map, int b);
+
+static inline void putnchr(char chr, int n);
