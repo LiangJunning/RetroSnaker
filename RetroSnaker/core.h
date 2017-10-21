@@ -10,14 +10,15 @@ typedef struct COOR_t
 
 typedef struct SPU_t 
 {//Snake Position Unit
-	COOR cp;//Current Position
+	COOR pos;//Position
 	SPU_t *next;
+	SPU_t *last;
 }SPU;
 
 typedef struct SNAKE_t 
 {
 	int lengh;
-	SPU pos;
+	SPU *head;
 }SNAKE;
 
 typedef struct GSettings_t
@@ -34,12 +35,13 @@ typedef struct CuState_t
 {
 	int time;//Unit:s
 	int score;
-	int dir;//Direction
+	int dir;//Direction 作为消息
+	SNAKE snake;
 }CuState;
 
-enum eDirection
+enum eDirection //作为消息
 {
-	UP,DOWN,LEFT,RIGHT
+	FORWARD,UP,DOWN,LEFT,RIGHT
 };
 
 //入口
@@ -60,13 +62,22 @@ void TrunDown();
 //向上
 void TurnUp();
 
-//输出
-static void output(char * map, GSettings Settings, CuState State);
+/*//输出
+void output(char * map, GSettings Settings, CuState State);
+
+//刷新
+void refresh(char** map, GSettings Settings, CuState State);
 
 //初始化map
 void init_map(char** map, int a, int b, GSettings Settings);
 
 //跳转map
-inline char* goto_map(int x, int y, char* map, int b);
+inline char* goto_map(int x, int y, char* map, int b);*///dm
+
+//初始化snake
+void init_snake(CuState *State, GSettings Settings);
+
+//释放snake
+void free_snake(SNAKE* Snake);
 
 static inline void putnchr(char chr, int n);

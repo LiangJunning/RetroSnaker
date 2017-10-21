@@ -2,6 +2,7 @@
 #include <windows.h>
 //#include <stdio.h>
 #include <conio.h>
+#include "core.h"
 
 void gotoxy(HANDLE hOut, int x, int y);
 void getxy(HANDLE hOut, int &x, int &y);
