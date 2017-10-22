@@ -15,7 +15,7 @@ void play(GSettings Settings)
 	CuState State;
 	
 	init_snake(&State, Settings);
-
+	output(Settings, State);
 	//char* map;//dm
 	//init_map(&map, Settings.a, Settings.b,Settings);//dm
 	getchar();
@@ -58,7 +58,7 @@ void init_snake(CuState *State, GSettings Settings)
 	SPU *cu,*head;
 
 	*State = { 0 };
-	State->snake.lengh = Settings.init_snake_len;
+	State->snake.length = Settings.init_snake_len;
 	cu = head = State->snake.head = (SPU*)malloc(sizeof(SPU));
 	head->pos = { Settings.init_snake_len - 1,0 };
 	for (int i = Settings.init_snake_len - 2; i >= 0; i--)
@@ -76,12 +76,61 @@ void init_snake(CuState *State, GSettings Settings)
 void free_snake(SNAKE * Snake)
 {
 	SPU *cu=Snake->head;
-	for (int i = 1; i < Snake->lengh; i++, cu = cu->next)
+	for (int i = 1; i < Snake->length; i++, cu = cu->next)
 		free(cu->last);
+}
+
+void output(GSettings Settings, CuState State)
+{
+	int len = State.snake.length;
+	int fork = 0;
+	char bo = Settings.border;
+	COOR *coors = (COOR*)malloc(sizeof(COOR)*State.snake.length);
+	SPU *cu=State.snake.head;
+
+
+	memset(coors, 0, sizeof(COOR)*len);
+	for (int i = 0; i < len; i++)
+	{
+		*(coors + i) = cu->pos;
+		cu = cu->next;
+	}
+	{//sort
+		int temp;
+		for (int i = 0; i<len - 1; i++)
+			for (int j = i + 1; j<len; j++) /*注意循环的上下限*/
+				if ((coors+i)->x>(coors + j)->x) 
+				{
+					temp = (coors+i)->x;
+					(coors+i)->x = (coors+j)->x;
+					(coors+j)->x = temp;
+				}
+	}
+	putnchr(bo, Settings.b + 2);
+	putchar('\n');
+
+	for (int i = 0; i < Settings.a; i++)
+	{
+	putchar(bo);
+	for (int j = 0; j < Settings.b; j++)
+	{
+		if ((coors + fork)->y == i)
+		{
+			putchar(Settings.snakeu);
+			fork++;
+		}
+		else
+			putchar(Settings.fill);
+	}
+	putchar(bo);
+	putchar('\n');
+	}
+
+	putnchr(bo, Settings.b + 2);
 }
 
 inline void putnchr(char chr, int n)
 {
-	for (int i; i < n; i++)
+	for (int i = 0; i < n; i++)
 		putchar(chr);
 }

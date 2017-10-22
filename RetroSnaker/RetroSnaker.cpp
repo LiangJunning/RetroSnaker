@@ -41,11 +41,12 @@ int main()
 	GSettings Settings =
 	{
 		20,
-		30,
+		40,
 		1,
 		'=',
-		'0',
-		5
+		'O',
+		' ',
+		8
 	};
 	play(Settings);
     return 0;

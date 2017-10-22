@@ -17,7 +17,7 @@ typedef struct SPU_t
 
 typedef struct SNAKE_t 
 {
-	int lengh;
+	int length;
 	SPU *head;
 }SNAKE;
 
@@ -28,7 +28,8 @@ typedef struct GSettings_t
 	int feq;//Frequency     Unit:feq t/s
 	char border;
 	char snakeu;//Snake Unit
-	int init_snake_len;//Initial Snake Lengh
+	char fill;
+	int init_snake_len;//Initial Snake length
 }GSettings;
 
 typedef struct CuState_t
@@ -79,5 +80,8 @@ void init_snake(CuState *State, GSettings Settings);
 
 //ÊÍ·Åsnake
 void free_snake(SNAKE* Snake);
+
+//Êä³ö
+void output(GSettings Settings, CuState State);
 
 static inline void putnchr(char chr, int n);
