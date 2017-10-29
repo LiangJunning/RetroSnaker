@@ -36,44 +36,21 @@ typedef struct CuState_t
 {
 	int time;//Unit:s
 	int score;
-	int dir;//Direction 作为消息
+	int dir;
+	int ldir;//lase dir
 	SNAKE snake;
 }CuState;
 
-enum eDirection //作为消息
+enum eDirection
 {
-	FORWARD,UP,DOWN,LEFT,RIGHT
+	UP,DOWN,LEFT,RIGHT
 };
 
 //入口
 void play(GSettings Settings);
 
 //前进
-void Forward();
-
-//左转
-void TurnLeft();
-
-//右转
-void TurnRight();
-
-//向下
-void TrunDown();
-
-//向上
-void TurnUp();
-
-/*//输出
-void output(char * map, GSettings Settings, CuState State);
-
-//刷新
-void refresh(char** map, GSettings Settings, CuState State);
-
-//初始化map
-void init_map(char** map, int a, int b, GSettings Settings);
-
-//跳转map
-inline char* goto_map(int x, int y, char* map, int b);*///dm
+void Forward(GSettings Settings, CuState * State);
 
 //初始化snake
 void init_snake(CuState *State, GSettings Settings);
@@ -84,4 +61,14 @@ void free_snake(SNAKE* Snake);
 //输出
 void output(GSettings Settings, CuState State);
 
+//刷新
+void refresh(GSettings Settings, CuState *State, COOR newpos);
+
+//装壁
+void bump(CuState State);
+
+//static DWORD __stdcall keypro(LPVOID lpParam);
+
 static inline void putnchr(char chr, int n);
+
+static void wait(int mm);

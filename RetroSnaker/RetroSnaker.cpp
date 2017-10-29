@@ -10,8 +10,6 @@
 
 using namespace std;
 
-void roll_test(void);
-
 extern void gotoxy(HANDLE hOut, int x, int y);
 extern void getxy(HANDLE hOut, int &x, int &y);
 
@@ -40,9 +38,9 @@ int main()
 
 	GSettings Settings =
 	{
-		20,
-		40,
-		1,
+		25,
+		60,
+		6,
 		'=',
 		'O',
 		' ',
@@ -52,7 +50,3 @@ int main()
     return 0;
 }
 
-void roll_test(void)
-{
-	
-}

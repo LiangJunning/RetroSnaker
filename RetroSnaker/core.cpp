@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <Windows.h>
 #include <time.h>
+#include <conio.h>
 
 extern void gotoxy(HANDLE hOut, int x, int y);
 extern void getxy(HANDLE hOut, int &x, int &y);
@@ -16,42 +17,18 @@ void play(GSettings Settings)
 	
 	init_snake(&State, Settings);
 	output(Settings, State);
+	{//trigger
+		char ch = _getch();
+		while (ch != 'd' && ch != 's')
+			ch = _getch();
+		State.dir = ch == 's' ? DOWN : RIGHT;
+	}
+	Forward(Settings, &State);
 	//char* map;//dm
 	//init_map(&map, Settings.a, Settings.b,Settings);//dm
 	getchar();
 	free_snake(&State.snake);
 }
-
-/*void output(char * map, GSettings Settings,CuState State)
-{
-	putnchr(Settings.border, Settings.b + 2);
-	putchar('\n');
-	
-	
-}
-
-void refresh(char ** map, GSettings Settings, CuState State)
-{
-	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-
-}
-
-void init_map(char ** map, int a, int b, GSettings Settings)
-{
-	*map = (char*)malloc((b + 1)*a + sizeof(char));
-	memset(*map, 32, (b + 1)*a + sizeof(char));
-	//const char * (gm) = (goto_map)(char* map, int x, int y, int b = b);
-	//char * (*gm)(int x, int y, char* map, int b) = goto_map;
-	*goto_map(0, 0, *map, b);
-	for (int i = 0; i < Settings.init_snake_len; i++)
-		*goto_map(i, 0, *map, b) = Settings.snakeu;
-
-}
-
-inline char* goto_map(int x, int y, char* map, int b)
-{
-	return (map + (y + 1)*(b + 1) + x);
-}*///dm
 
 void init_snake(CuState *State, GSettings Settings)
 {
@@ -127,10 +104,145 @@ void output(GSettings Settings, CuState State)
 	}
 
 	putnchr(bo, Settings.b + 2);
+	putchar('\n');
 }
+
+void refresh(GSettings Settings, CuState * State, COOR newpos)
+{
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	SNAKE *sn=&State->snake;
+	int x, y;
+	
+	getxy(hOut,x, y);
+	gotoxy(hOut, sn->head->last->pos.x + 1, sn->head->last->pos.y + 1);
+	putchar(Settings.fill);
+	gotoxy(hOut, newpos.x + 1, newpos.y + 1);
+	putchar(Settings.snakeu);
+	gotoxy(hOut, x, y);
+	sn->head->last->pos = newpos;
+	sn->head = sn->head->last;
+}
+
+void bump(CuState State)
+{
+	puts("Bump!");
+}
+
+DWORD __stdcall keypro(LPVOID lpParam)
+{
+	CuState *state=(CuState*)lpParam;
+	while (1)
+	{
+		switch (_getch())
+		{
+		case 'w':
+			if (state->dir != DOWN)
+				state->dir = UP;
+			break;
+		case 'a':
+			//state->ldir = state->dir;
+			if (state->dir != RIGHT)
+				state->dir = LEFT;
+			break;
+		case 's':
+			//state->ldir = state->dir;
+			if (state->dir != UP)
+				state->dir = DOWN;
+			break;
+		case 'd':
+			//state->ldir = state->dir;
+			if (state->dir != LEFT)
+				state->dir = RIGHT;
+			break;
+			/*case default:
+			break;*/
+		}
+	}
+		
+	return 0;
+}
+
+void Forward(GSettings Settings, CuState * State)
+{
+	HANDLE hKeypro;
+	int interval = (int)((1.0f / (float)Settings.feq)*1000.0f);
+	int isbump = 0;
+	SNAKE *sn = &State->snake;
+	COOR newpos;
+	State->ldir = State->dir;
+
+	hKeypro = CreateThread(NULL, 2, keypro, State, 0, nullptr);
+	/*while (1)
+		printf("%d\n", State->dir);*/
+	while (1)
+	{
+		switch (State->dir)
+		{
+			case DOWN:
+			{
+				newpos = { sn->head->pos.x,sn->head->pos.y + 1 };
+				refresh(Settings, State, newpos);
+				if (sn->head->pos.y == Settings.a)
+				{
+					isbump = 1;
+					break;
+				}
+			}
+			break;
+			case UP:
+			{
+				newpos = { sn->head->pos.x,sn->head->pos.y - 1 };
+				refresh(Settings, State, newpos);
+				if (sn->head->pos.y == -1)
+				{
+					isbump = 1;
+					break;
+				}
+			}
+			break;
+			case LEFT:
+			{
+				newpos = { sn->head->pos.x-1,sn->head->pos.y};
+				refresh(Settings, State, newpos);
+				if (sn->head->pos.x == -1)
+				{
+					isbump = 1;
+					break;
+				}
+			}
+			break;
+			case RIGHT:
+			{
+				newpos = { sn->head->pos.x+1,sn->head->pos.y};
+				refresh(Settings, State, newpos);
+				if (sn->head->pos.x + 1 == Settings.b + 1)
+				{
+					isbump = 1;
+					break;
+				}
+			}
+			break;
+		}
+		if (isbump)
+		{
+			TerminateThread(hKeypro, 0);
+			bump(*State);
+			break;
+		}
+		wait(interval);
+	}
+}
+
 
 inline void putnchr(char chr, int n)
 {
 	for (int i = 0; i < n; i++)
 		putchar(chr);
+}
+
+void wait(int mm)
+{
+	clock_t s = clock();
+	while (((int)((float)(clock() - s) / (float)CLOCKS_PER_SEC * 1000.0f)) < mm)
+		continue;
 }
