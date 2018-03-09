@@ -1,0 +1,55 @@
+void output(GSettings Settings, CuState State)
+{
+	int len = State.snake.length, fork = 0;
+	char bo = Settings.border;
+	int x, y;
+	//COOR *coors = (COOR*)malloc(sizeof(COOR)*State.snake.length);
+	//SPU *cu=State.snake.head;
+
+	/*memset(coors, 0, sizeof(COOR)*len);
+	for (int i = 0; i < len; i++)
+	{
+		*(coors + i) = cu->pos;
+		cu = cu->next;
+	}
+	{//sort
+		int temp;
+		for (int i = 0; i<len - 1; i++)
+			for (int j = i + 1; j<len; j++) 
+				if ((coors+i)->x>(coors + j)->x) 
+				{
+					temp = (coors+i)->x;
+					(coors+i)->x = (coors+j)->x;
+					(coors+j)->x = temp;
+				}
+	}*/
+	putnchr(bo, Settings.b + 2);
+	putchar('\n');
+	for (int i = 0; i < Settings.a; i++,fork=0)
+	{
+		putchar(bo);
+		if (i == 0)
+		{
+			putnchr(Settings.snakeu, len);
+			putnchr(Settings.fill, Settings.b - len);
+		}
+		else
+			putnchr(Settings.fill, Settings.b);
+		/*for (int j = 0; j < Settings.b; j++)
+		{
+			if ((coors + fork)->y == i)
+			{
+				putchar(Settings.snakeu);
+				fork++;
+			}
+			else
+				putchar(Settings.fill);
+		}*/
+		putchar(bo);
+		putchar('\n');
+	}
+	putnchr(bo, Settings.b + 2);
+	putchar('\n');
+	
+	puts(strlist[1]);
+}

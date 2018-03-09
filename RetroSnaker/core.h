@@ -2,6 +2,18 @@
 
 using namespace std;
 
+/*
+Coordinate System
+bbbbbbbbbbbb->x
+boq        b
+bp         ba=3
+b         rb
+bbbbbbbbbbbb
+|   b=10
+y
+Examples:o(0,0) p(0,1) q(1,0) r(b-1,a-1)
+*/
+
 typedef struct COOR_t 
 {
 	int x;
@@ -23,11 +35,12 @@ typedef struct SNAKE_t
 
 typedef struct GSettings_t
 {//Game Settings
-	int a;
-	int b;
+	int a;//y
+	int b;//x
 	int feq;//Frequency     Unit:feq t/s
 	char border;
 	char snakeu;//Snake Unit
+	char food;
 	char fill;
 	int init_snake_len;//Initial Snake length
 }GSettings;
@@ -37,13 +50,14 @@ typedef struct CuState_t
 	int time;//Unit:s
 	int score;
 	int dir;
-	int ldir;//lase dir
+	int ldir;//last dir
+	COOR food;
 	SNAKE snake;
 }CuState;
 
 enum eDirection
 {
-	UP,DOWN,LEFT,RIGHT
+	UP,DOWN,LEFT,RIGHT,PAUSE
 };
 
 //入口
@@ -64,11 +78,13 @@ void output(GSettings Settings, CuState State);
 //刷新
 void refresh(GSettings Settings, CuState *State, COOR newpos);
 
-//装壁
-void bump(CuState State);
+//游戏结束提示
+void bump(int type);
+
+//放置食物
+void put_food(GSettings Settings, CuState *State);
+
+//得到食物
+int got_food(GSettings Settings, CuState *State);
 
 //static DWORD __stdcall keypro(LPVOID lpParam);
-
-static inline void putnchr(char chr, int n);
-
-static void wait(int mm);

@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "core.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <Windows.h>
@@ -10,13 +9,32 @@
 extern void gotoxy(HANDLE hOut, int x, int y);
 extern void getxy(HANDLE hOut, int &x, int &y);
 
+//Private
+int inline static IsEatSelf(CuState *State);
+static inline void putnchr(char chr, int n);
+static void wait(int mm);
+
+const char *strlist[] = 
+{ 
+	"Retro Snaker     Score:",//title prefix
+	"Press 'w''s''a''d' to go up, down, left, right. Press 'space' to pause.",//runtime tips
+	"Press 'w''s''a''d' to continue and go up, down, left, right.           ",//pause tips
+	"Bump!                                                                  ",//bump
+	"Eat self!                                                              ",//eat self
+	"Game Over! You are Winner!                                             "//game over
+};
+
 void play(GSettings Settings)
 {
 	SNAKE sn = { 0 };
 	CuState State;
+	char cmd[MAX_PATH];
 	
 	init_snake(&State, Settings);
+	sprintf(cmd, "title %s%d", strlist[0], State.score);
+	system(cmd);
 	output(Settings, State);
+	put_food(Settings, &State);
 	{//trigger
 		char ch = _getch();
 		while (ch != 'd' && ch != 's')
@@ -24,16 +42,15 @@ void play(GSettings Settings)
 		State.dir = ch == 's' ? DOWN : RIGHT;
 	}
 	Forward(Settings, &State);
-	//char* map;//dm
-	//init_map(&map, Settings.a, Settings.b,Settings);//dm
-	getchar();
 	free_snake(&State.snake);
+	getchar();
 }
 
 void init_snake(CuState *State, GSettings Settings)
 {
 	SPU *cu,*head;
 
+	srand(time(0));
 	*State = { 0 };
 	State->snake.length = Settings.init_snake_len;
 	cu = head = State->snake.head = (SPU*)malloc(sizeof(SPU));
@@ -59,52 +76,32 @@ void free_snake(SNAKE * Snake)
 
 void output(GSettings Settings, CuState State)
 {
-	int len = State.snake.length;
-	int fork = 0;
+	int len = State.snake.length, fork = 0;
 	char bo = Settings.border;
-	COOR *coors = (COOR*)malloc(sizeof(COOR)*State.snake.length);
-	SPU *cu=State.snake.head;
+	int x, y;
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
 
-	memset(coors, 0, sizeof(COOR)*len);
-	for (int i = 0; i < len; i++)
-	{
-		*(coors + i) = cu->pos;
-		cu = cu->next;
-	}
-	{//sort
-		int temp;
-		for (int i = 0; i<len - 1; i++)
-			for (int j = i + 1; j<len; j++) /*注意循环的上下限*/
-				if ((coors+i)->x>(coors + j)->x) 
-				{
-					temp = (coors+i)->x;
-					(coors+i)->x = (coors+j)->x;
-					(coors+j)->x = temp;
-				}
-	}
 	putnchr(bo, Settings.b + 2);
 	putchar('\n');
-
-	for (int i = 0; i < Settings.a; i++)
+	for (int i = 0; i < Settings.a; i++,fork=0)
 	{
-	putchar(bo);
-	for (int j = 0; j < Settings.b; j++)
-	{
-		if ((coors + fork)->y == i)
+		putchar(bo);
+		if (i == 0)
 		{
-			putchar(Settings.snakeu);
-			fork++;
+			putnchr(Settings.snakeu, len);
+			putnchr(Settings.fill, Settings.b - len);
 		}
 		else
-			putchar(Settings.fill);
+			putnchr(Settings.fill, Settings.b);
+		putchar(bo);
+		putchar('\n');
 	}
-	putchar(bo);
-	putchar('\n');
-	}
-
 	putnchr(bo, Settings.b + 2);
 	putchar('\n');
+	getxy(hOut, x, y);
+	puts(strlist[1]);
+	gotoxy(hOut, x, y);
 }
 
 void refresh(GSettings Settings, CuState * State, COOR newpos)
@@ -123,9 +120,67 @@ void refresh(GSettings Settings, CuState * State, COOR newpos)
 	sn->head = sn->head->last;
 }
 
-void bump(CuState State)
+void bump(int type)
 {
-	puts("Bump!");
+	if (type == 0)
+		puts(strlist[3]);
+	else if (type == 1)
+		puts(strlist[4]);
+	else if (type == 2)
+		puts(strlist[5]);
+}
+
+void put_food(GSettings Settings, CuState * State)
+{
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	SPU *cur = State->snake.head;
+	int x, y;
+	int slen = State->snake.length;
+	int i, IsInvalid = 0;
+
+	getxy(hOut, x, y);
+	State->food = { rand() % Settings.b ,rand() % Settings.a };
+	for (i = 0; i < slen - 1; i++)
+	{
+		if (cur->pos.x==State->food.x&&cur->pos.y==State->food.y)
+		{
+			put_food(Settings, State);
+			IsInvalid = 1;
+			break;
+		}
+		cur = cur->next;
+	}
+	if (!IsInvalid)
+	{
+		gotoxy(hOut, State->food.x + 1, State->food.y + 1);
+		putchar(Settings.food);
+		gotoxy(hOut, x, y);
+	}
+}
+
+int got_food(GSettings Settings, CuState * State)
+{
+	char cmd[MAX_PATH];
+	int x, y;
+	SPU *nexth = (SPU*)malloc(sizeof(SPU));
+	SNAKE *sn = &State->snake;
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	sprintf(cmd, "title %s%d", strlist[0], ++State->score);
+	system(cmd);
+	*nexth = { State->food,sn->head,sn->head->last };
+	sn->head->last->next = nexth;
+	sn->head->last = nexth;
+	sn->head = nexth;
+	sn->length++;
+	getxy(hOut, x, y);
+	gotoxy(hOut, State->food.x + 1, State->food.y + 1);
+	putchar(Settings.snakeu);
+	gotoxy(hOut, x, y);
+	if (sn->length == Settings.a*Settings.b)
+		return 1;
+	put_food(Settings, State);
+	return 0;
 }
 
 DWORD __stdcall keypro(LPVOID lpParam)
@@ -140,22 +195,22 @@ DWORD __stdcall keypro(LPVOID lpParam)
 				state->dir = UP;
 			break;
 		case 'a':
-			//state->ldir = state->dir;
 			if (state->dir != RIGHT)
 				state->dir = LEFT;
 			break;
 		case 's':
-			//state->ldir = state->dir;
 			if (state->dir != UP)
 				state->dir = DOWN;
 			break;
 		case 'd':
-			//state->ldir = state->dir;
 			if (state->dir != LEFT)
 				state->dir = RIGHT;
 			break;
-			/*case default:
-			break;*/
+		case ' ':
+			state->dir = PAUSE;
+			break;
+		default:
+			break;
 		}
 	}
 		
@@ -166,23 +221,28 @@ void Forward(GSettings Settings, CuState * State)
 {
 	HANDLE hKeypro;
 	int interval = (int)((1.0f / (float)Settings.feq)*1000.0f);
-	int isbump = 0;
+	int isbump = 0, ispause = 0;
 	SNAKE *sn = &State->snake;
 	COOR newpos;
-	State->ldir = State->dir;
 
 	hKeypro = CreateThread(NULL, 2, keypro, State, 0, nullptr);
-	/*while (1)
-		printf("%d\n", State->dir);*/
 	while (1)
 	{
+		if (ispause&&State->dir != PAUSE)
+		{
+			int x, y;
+			HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+			getxy(hOut, x, y);
+			puts(strlist[1]);
+			gotoxy(hOut, x, y);
+			ispause = 0;
+		}
 		switch (State->dir)
 		{
 			case DOWN:
 			{
 				newpos = { sn->head->pos.x,sn->head->pos.y + 1 };
-				refresh(Settings, State, newpos);
-				if (sn->head->pos.y == Settings.a)
+				if (newpos.y == Settings.a)
 				{
 					isbump = 1;
 					break;
@@ -192,8 +252,7 @@ void Forward(GSettings Settings, CuState * State)
 			case UP:
 			{
 				newpos = { sn->head->pos.x,sn->head->pos.y - 1 };
-				refresh(Settings, State, newpos);
-				if (sn->head->pos.y == -1)
+				if (newpos.y == -1)
 				{
 					isbump = 1;
 					break;
@@ -203,8 +262,7 @@ void Forward(GSettings Settings, CuState * State)
 			case LEFT:
 			{
 				newpos = { sn->head->pos.x-1,sn->head->pos.y};
-				refresh(Settings, State, newpos);
-				if (sn->head->pos.x == -1)
+				if (newpos.x == -1)
 				{
 					isbump = 1;
 					break;
@@ -214,19 +272,43 @@ void Forward(GSettings Settings, CuState * State)
 			case RIGHT:
 			{
 				newpos = { sn->head->pos.x+1,sn->head->pos.y};
-				refresh(Settings, State, newpos);
-				if (sn->head->pos.x + 1 == Settings.b + 1)
+				if (newpos.x == Settings.b)
 				{
 					isbump = 1;
 					break;
 				}
 			}
 			break;
+			case PAUSE:
+			{
+				if (!ispause)
+				{
+					int x, y;
+					HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+					getxy(hOut, x, y);
+					puts(strlist[2]);
+					gotoxy(hOut, x, y);
+				}
+				ispause = 1;
+				continue;
+			}
 		}
+		if (newpos.x == State->food.x&&newpos.y == State->food.y)
+		{
+			if (got_food(Settings, State))
+			{
+				bump(2);
+				break;
+			}
+		}
+		else
+			refresh(Settings, State, newpos);
+		if (IsEatSelf(State))
+			break;
 		if (isbump)
 		{
 			TerminateThread(hKeypro, 0);
-			bump(*State);
+			bump(0);
 			break;
 		}
 		wait(interval);
@@ -245,4 +327,24 @@ void wait(int mm)
 	clock_t s = clock();
 	while (((int)((float)(clock() - s) / (float)CLOCKS_PER_SEC * 1000.0f)) < mm)
 		continue;
+}
+
+inline int IsEatSelf(CuState * State)
+{
+	SNAKE *sn = &State->snake;
+	SPU *cur=sn->head->next;
+	int slen = sn->length;
+	int i;
+	
+	for (i = 0; i < slen - 1; i++)
+	{
+		if (sn->head->pos.x == cur->pos.x&&sn->head->pos.y == cur->pos.y)
+		{
+			bump(1);
+			return 1;
+		}
+		cur = cur->next;
+	}
+
+	return 0;
 }

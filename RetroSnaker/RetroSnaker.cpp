@@ -38,13 +38,14 @@ int main()
 
 	GSettings Settings =
 	{
-		25,
+		20,
 		60,
-		6,
+		4,
 		'=',
 		'O',
+		'$',
 		' ',
-		8
+		5
 	};
 	play(Settings);
     return 0;
