@@ -38,9 +38,9 @@ int main()
 
 	GSettings Settings =
 	{
-		20,
-		60,
-		4,
+		30,
+		90,
+		16,
 		'=',
 		'O',
 		'$',

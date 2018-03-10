@@ -50,6 +50,7 @@ typedef struct CuState_t
 	int time;//Unit:s
 	int score;
 	int dir;
+	int interval;
 	int ldir;//last dir
 	COOR food;
 	SNAKE snake;
@@ -86,5 +87,8 @@ void put_food(GSettings Settings, CuState *State);
 
 //得到食物
 int got_food(GSettings Settings, CuState *State);
+
+//显示开始屏幕
+void StartScreen(GSettings* Settings);
 
 //static DWORD __stdcall keypro(LPVOID lpParam);

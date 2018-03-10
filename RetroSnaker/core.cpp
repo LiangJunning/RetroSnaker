@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <time.h>
 #include <conio.h>
+#define SchemesNum 4
 
 extern void gotoxy(HANDLE hOut, int x, int y);
 extern void getxy(HANDLE hOut, int &x, int &y);
@@ -16,12 +17,24 @@ static void wait(int mm);
 
 const char *strlist[] = 
 { 
-	"Retro Snaker     Score:",//title prefix
-	"Press 'w''s''a''d' to go up, down, left, right. Press 'space' to pause.",//runtime tips
-	"Press 'w''s''a''d' to continue and go up, down, left, right.           ",//pause tips
-	"Bump!                                                                  ",//bump
-	"Eat self!                                                              ",//eat self
-	"Game Over! You are Winner!                                             "//game over
+	"Retro Snaker     Score:",//0.title prefix
+	"Press 'w''s''a''d' to go up, down, left, right. Press 'space' to pause.",//1.runtime tips
+	"Press 'w''s''a''d' to continue and go up, down, left, right.           ",//2.pause tips
+	"Bump!                                                                  ",//3.bump
+	"Eat self!                                                              ",//4.eat self
+	"Game Over! You are Winner!                                             ",//5.game over
+	"Welcome!\n",//6.Welcome
+	"Here's the default scheme:",//7.Start tips
+	"Press enter to start game. Press any other key to select other game schemes.",//8.Start tips
+	"Please enter a number to select schemes:",//9.select scheme
+	"Error:Input invalid! Please try again."//10.Input invalid
+};
+
+const GSettings schemes[] = {
+	{ 10,30,4,'=','O','$',' ',5 },
+	{ 15,45,6,'=','O','$',' ',5 },
+	{ 20,60,8,'=','O','$',' ',5 },
+	{ 30,90,16,'=','O','$',' ',5 }
 };
 
 void play(GSettings Settings)
@@ -30,6 +43,7 @@ void play(GSettings Settings)
 	CuState State;
 	char cmd[MAX_PATH];
 	
+	StartScreen(&Settings);
 	init_snake(&State, Settings);
 	sprintf(cmd, "title %s%d", strlist[0], State.score);
 	system(cmd);
@@ -50,7 +64,7 @@ void init_snake(CuState *State, GSettings Settings)
 {
 	SPU *cu,*head;
 
-	srand(time(0));
+	srand((unsigned int)time(0));
 	*State = { 0 };
 	State->snake.length = Settings.init_snake_len;
 	cu = head = State->snake.head = (SPU*)malloc(sizeof(SPU));
@@ -79,9 +93,11 @@ void output(GSettings Settings, CuState State)
 	int len = State.snake.length, fork = 0;
 	char bo = Settings.border;
 	int x, y;
+	char cmd[MAX_PATH];
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
-
+	sprintf(cmd, "mode con cols=%d lines=%d", Settings.b + 2, Settings.a + 4 + (int)(strlen(strlist[1]) / (Settings.b + 2)));
+	system(cmd);
 	putnchr(bo, Settings.b + 2);
 	putchar('\n');
 	for (int i = 0; i < Settings.a; i++,fork=0)
@@ -183,6 +199,40 @@ int got_food(GSettings Settings, CuState * State)
 	return 0;
 }
 
+void StartScreen(GSettings * Settings)
+{
+	char ch;
+	int isinvalid = 1;
+	puts(strlist[6]);
+	puts(strlist[7]);
+	printf("Column: %d\nLine: %d\nInitial Speed: %d times/sec\n", Settings->b, Settings->a, Settings->feq);
+	puts(strlist[8]);
+	if (_getch() == '\r')
+	{
+		system("cls");
+		return;
+	}
+	system("cls");
+	for (int i = 0; i < SchemesNum; i++)
+		printf("%d.\nColumn: %d\nLine: %d\nInitial Speed: %d times/sec\n\n", i + 1, schemes[i].b, schemes[i].a, schemes[i].feq);
+	printf("%s_\b", strlist[9]);
+	while (1)
+	{
+		ch = _getch();
+		putchar(ch);
+		if (isdigit(ch) && ch - '0' > 0 && ch - '0' <= SchemesNum)
+		{
+			*Settings = schemes[ch - '0' - 1];
+			return;
+		}
+		system("cls");
+		puts(strlist[10]);
+		for (int i = 0; i < SchemesNum; i++)
+			printf("%d.\nColumn: %d\nLine: %d\nInitial Speed: %d times/sec\n\n", i + 1, schemes[i].b, schemes[i].a, schemes[i].feq);
+		printf("%s_\b", strlist[9]);
+	}
+}
+
 DWORD __stdcall keypro(LPVOID lpParam)
 {
 	CuState *state=(CuState*)lpParam;
@@ -220,11 +270,11 @@ DWORD __stdcall keypro(LPVOID lpParam)
 void Forward(GSettings Settings, CuState * State)
 {
 	HANDLE hKeypro;
-	int interval = (int)((1.0f / (float)Settings.feq)*1000.0f);
 	int isbump = 0, ispause = 0;
 	SNAKE *sn = &State->snake;
 	COOR newpos;
 
+	State->interval = (int)((1.0f / (float)Settings.feq)*1000.0f);
 	hKeypro = CreateThread(NULL, 2, keypro, State, 0, nullptr);
 	while (1)
 	{
@@ -311,7 +361,7 @@ void Forward(GSettings Settings, CuState * State)
 			bump(0);
 			break;
 		}
-		wait(interval);
+		wait(State->interval);
 	}
 }
 
