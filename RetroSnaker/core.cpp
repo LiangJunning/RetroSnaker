@@ -5,7 +5,8 @@
 #include <Windows.h>
 #include <time.h>
 #include <conio.h>
-#define SchemesNum 4
+#define SchemesNum 5
+#define MIN_COLS 45
 
 extern void gotoxy(HANDLE hOut, int x, int y);
 extern void getxy(HANDLE hOut, int &x, int &y);
@@ -14,26 +15,29 @@ extern void getxy(HANDLE hOut, int &x, int &y);
 int inline static IsEatSelf(CuState *State);
 static inline void putnchr(char chr, int n);
 static void wait(int mm);
+static int feq, isstart = 1, isplaying = 1;
 
-const char *strlist[] = 
-{ 
-	"Retro Snaker     Score:",//0.title prefix
-	"Press 'w''s''a''d' to go up, down, left, right. Press 'space' to pause.",//1.runtime tips
-	"Press 'w''s''a''d' to continue and go up, down, left, right.           ",//2.pause tips
-	"Bump!                                                                  ",//3.bump
-	"Eat self!                                                              ",//4.eat self
-	"Game Over! You are Winner!                                             ",//5.game over
-	"Welcome!\n",//6.Welcome
-	"Here's the default scheme:",//7.Start tips
-	"Press enter to start game. Press any other key to select other game schemes.",//8.Start tips
-	"Please enter a number to select schemes:",//9.select scheme
-	"Error:Input invalid! Please try again."//10.Input invalid
+const char *strlist[] =
+{
+	"title 贪吃蛇     得分:%d   每次得分:%2d",//0.title cmd
+	"W:↑ S:↓ A:← D:→ Q:减速 E:加速 点击空格键暂停游戏。          ",//1.runtime tips
+	"W:↑ S:↓ A:← D:→ 点击W、S、A或D控制方向并继续。              ",//2.pause tips
+	"撞墙！游戏结束。                                                ",//3.bump
+	"咬到自己了。游戏结束。                                          ",//4.eat self
+	"您赢了！游戏结束。                                              ",//5.game over
+	"欢迎！\n",//6.Welcome
+	"以下是默认游戏方案:",//7.Start tips
+	"点击回车开始游戏。点击其他任意键选择另一种游戏方案。",//8.Start tips
+	"请输入您要选择的游戏方案的序号:",//9.select scheme
+	"错误：输入无效！请重试。",//10.Input invalid
+	"得分: %3d\n是否重新开始?(1.是 2.否 3.返回开始屏幕)  请选择：_\b"//11.Game over
 };
 
 const GSettings schemes[] = {
 	{ 10,30,4,'=','O','$',' ',5 },
 	{ 15,45,6,'=','O','$',' ',5 },
 	{ 20,60,8,'=','O','$',' ',5 },
+	{ 25,75,10,'=','O','$',' ',5 },
 	{ 30,90,16,'=','O','$',' ',5 }
 };
 
@@ -43,9 +47,12 @@ void play(GSettings Settings)
 	CuState State;
 	char cmd[MAX_PATH];
 	
-	StartScreen(&Settings);
+	system("cls");
+	if(isstart)
+		StartScreen(&Settings);
+	isstart = 0;
 	init_snake(&State, Settings);
-	sprintf(cmd, "title %s%d", strlist[0], State.score);
+	sprintf(cmd, strlist[0], State.score, feq);
 	system(cmd);
 	output(Settings, State);
 	put_food(Settings, &State);
@@ -56,8 +63,6 @@ void play(GSettings Settings)
 		State.dir = ch == 's' ? DOWN : RIGHT;
 	}
 	Forward(Settings, &State);
-	free_snake(&State.snake);
-	getchar();
 }
 
 void init_snake(CuState *State, GSettings Settings)
@@ -65,6 +70,7 @@ void init_snake(CuState *State, GSettings Settings)
 	SPU *cu,*head;
 
 	srand((unsigned int)time(0));
+	feq = Settings.feq;
 	*State = { 0 };
 	State->snake.length = Settings.init_snake_len;
 	cu = head = State->snake.head = (SPU*)malloc(sizeof(SPU));
@@ -96,7 +102,7 @@ void output(GSettings Settings, CuState State)
 	char cmd[MAX_PATH];
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
-	sprintf(cmd, "mode con cols=%d lines=%d", Settings.b + 2, Settings.a + 4 + (int)(strlen(strlist[1]) / (Settings.b + 2)));
+	sprintf(cmd, "mode con cols=%d lines=%d", Settings.b + 2 < MIN_COLS ? 45 : Settings.b + 2, Settings.a + 6 + (int)(strlen(strlist[1]) / (Settings.b + 2)));
 	system(cmd);
 	putnchr(bo, Settings.b + 2);
 	putchar('\n');
@@ -182,7 +188,7 @@ int got_food(GSettings Settings, CuState * State)
 	SNAKE *sn = &State->snake;
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
-	sprintf(cmd, "title %s%d", strlist[0], ++State->score);
+	sprintf(cmd, strlist[0], State->score += feq, feq);
 	system(cmd);
 	*nexth = { State->food,sn->head,sn->head->last };
 	sn->head->last->next = nexth;
@@ -205,7 +211,7 @@ void StartScreen(GSettings * Settings)
 	int isinvalid = 1;
 	puts(strlist[6]);
 	puts(strlist[7]);
-	printf("Column: %d\nLine: %d\nInitial Speed: %d times/sec\n", Settings->b, Settings->a, Settings->feq);
+	printf("列: %d\n行: %d\n初始速度: %d 格/秒\n", Settings->b, Settings->a, Settings->feq);
 	puts(strlist[8]);
 	if (_getch() == '\r')
 	{
@@ -214,12 +220,11 @@ void StartScreen(GSettings * Settings)
 	}
 	system("cls");
 	for (int i = 0; i < SchemesNum; i++)
-		printf("%d.\nColumn: %d\nLine: %d\nInitial Speed: %d times/sec\n\n", i + 1, schemes[i].b, schemes[i].a, schemes[i].feq);
+		printf("%d.\n列: %d\n行: %d\n初始速度: %d 格/秒\n\n", i + 1, schemes[i].b, schemes[i].a, schemes[i].feq);
 	printf("%s_\b", strlist[9]);
 	while (1)
 	{
-		ch = _getch();
-		putchar(ch);
+		ch = _getche();
 		if (isdigit(ch) && ch - '0' > 0 && ch - '0' <= SchemesNum)
 		{
 			*Settings = schemes[ch - '0' - 1];
@@ -228,54 +233,18 @@ void StartScreen(GSettings * Settings)
 		system("cls");
 		puts(strlist[10]);
 		for (int i = 0; i < SchemesNum; i++)
-			printf("%d.\nColumn: %d\nLine: %d\nInitial Speed: %d times/sec\n\n", i + 1, schemes[i].b, schemes[i].a, schemes[i].feq);
+			printf("%d.\n列: %d\n行: %d\n初始速度: %d 格/秒\n\n", i + 1, schemes[i].b, schemes[i].a, schemes[i].feq);
 		printf("%s_\b", strlist[9]);
 	}
 }
 
-DWORD __stdcall keypro(LPVOID lpParam)
-{
-	CuState *state=(CuState*)lpParam;
-	while (1)
-	{
-		switch (_getch())
-		{
-		case 'w':
-			if (state->dir != DOWN)
-				state->dir = UP;
-			break;
-		case 'a':
-			if (state->dir != RIGHT)
-				state->dir = LEFT;
-			break;
-		case 's':
-			if (state->dir != UP)
-				state->dir = DOWN;
-			break;
-		case 'd':
-			if (state->dir != LEFT)
-				state->dir = RIGHT;
-			break;
-		case ' ':
-			state->dir = PAUSE;
-			break;
-		default:
-			break;
-		}
-	}
-		
-	return 0;
-}
-
 void Forward(GSettings Settings, CuState * State)
 {
-	HANDLE hKeypro;
 	int isbump = 0, ispause = 0;
 	SNAKE *sn = &State->snake;
 	COOR newpos;
 
 	State->interval = (int)((1.0f / (float)Settings.feq)*1000.0f);
-	hKeypro = CreateThread(NULL, 2, keypro, State, 0, nullptr);
 	while (1)
 	{
 		if (ispause&&State->dir != PAUSE)
@@ -287,6 +256,70 @@ void Forward(GSettings Settings, CuState * State)
 			gotoxy(hOut, x, y);
 			ispause = 0;
 		}
+		if(_kbhit())
+			switch (_getch())
+			{
+			case 'w':
+				if (State->dir != DOWN)
+				{
+					if (State->dir == PAUSE&&State->ldir == DOWN)
+						break;
+					State->ldir = State->dir;
+					State->dir = UP;
+				}
+				break;
+			case 'a':
+				if (State->dir != RIGHT)
+				{
+					if (State->dir == PAUSE&&State->ldir == RIGHT)
+						break;
+					State->ldir = State->dir;
+					State->dir = LEFT;
+				}
+				break;
+			case 's':
+				if (State->dir != UP)
+				{
+					if (State->dir == PAUSE&&State->ldir == UP)
+						break;
+					State->ldir = State->dir;
+					State->dir = DOWN;
+				}
+				break;
+			case 'd':
+				if (State->dir != LEFT)
+				{
+					if (State->dir == PAUSE&&State->ldir == LEFT)
+						break;
+					State->ldir = State->dir;
+					State->dir = RIGHT;
+				}
+				break;
+			case ' ':
+				State->ldir = State->dir;
+				State->dir = PAUSE;
+				break;
+			case 'q':
+				if (feq > 1&&!ispause)
+				{
+					char cmd[MAX_PATH];
+					State->interval = (int)((1.0f / (float)--feq)*1000.0f);
+					sprintf(cmd, strlist[0], State->score, feq);
+					system(cmd);
+				}
+				break;
+			case 'e':
+			if(!ispause)
+			{
+				char cmd[MAX_PATH];
+				State->interval = (int)((1.0f / (float)++feq)*1000.0f);
+				sprintf(cmd, strlist[0], State->score, feq);
+				system(cmd);
+			}
+			break;
+			default:
+				break;
+			}
 		switch (State->dir)
 		{
 			case DOWN:
@@ -357,11 +390,32 @@ void Forward(GSettings Settings, CuState * State)
 			break;
 		if (isbump)
 		{
-			TerminateThread(hKeypro, 0);
 			bump(0);
 			break;
 		}
 		wait(State->interval);
+	}
+	free_snake(sn);
+	printf(strlist[11], State->score);
+	isplaying = 0;
+	char ch ;
+	ch = _getche();
+	while (ch < '0' || ch > '3')
+	{
+		putchar(ch);
+		system("cls");
+		puts(strlist[10]);
+		printf(strlist[11], State->score);
+		ch = _getche();
+	}
+	if (ch == '1')
+		play(Settings);
+	else if (ch == '3')
+	{
+		char szFullPath[MAX_PATH],cmd[MAX_PATH];
+		GetModuleFileNameA(NULL, szFullPath, MAX_PATH);
+		sprintf(cmd, "start %s", szFullPath);
+		system(cmd);
 	}
 }
 

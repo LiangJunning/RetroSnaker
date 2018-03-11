@@ -1,0 +1,15 @@
+
+const char *strlist[] = 
+{ 
+	"Retro Snaker     Score:",//0.title prefix
+	"Press 'w''s''a''d' to go up, down, left, right. Press 'space' to pause.",//1.runtime tips
+	"Press 'w''s''a''d' to continue and go up, down, left, right.           ",//2.pause tips
+	"Bump!                                                                  ",//3.bump
+	"Eat self!                                                              ",//4.eat self
+	"Game Over! You are Winner!                                             ",//5.game over
+	"Welcome!\n",//6.Welcome
+	"Here's the default scheme:",//7.Start tips
+	"Press enter to start game. Press any other key to select other game schemes.",//8.Start tips
+	"Please enter a number to select schemes:",//9.select scheme
+	"Error:Input invalid! Please try again."//10.Input invalid
+};

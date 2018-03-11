@@ -1,0 +1,67 @@
+DWORD __stdcall keypro(LPVOID lpParam)
+{
+	CuState *state=(CuState*)lpParam;
+	while (1)
+	{
+		if (!isplaying)
+		{
+			isplaying = 1;
+			return 0;
+		}
+		switch (_getch())
+		{
+		case 'w':
+			if (state->dir != DOWN)
+				state->dir = UP;
+			break;
+		case 'a':
+			if (state->dir != RIGHT)
+				state->dir = LEFT;
+			break;
+		case 's':
+			if (state->dir != UP)
+				state->dir = DOWN;
+			break;
+		case 'd':
+			if (state->dir != LEFT)
+				state->dir = RIGHT;
+			break;
+		case ' ':
+			state->dir = PAUSE;
+			break;
+		case 'q':
+			if (feq > 1)
+			{
+				char cmd[MAX_PATH];
+				state->interval = (int)((1.0f / (float)--feq)*1000.0f);
+				sprintf(cmd, strlist[0], state->score, feq);
+				system(cmd);
+			}
+			break;
+		case 'e':
+		{
+			char cmd[MAX_PATH];
+			state->interval = (int)((1.0f / (float)++feq)*1000.0f);
+			sprintf(cmd, strlist[0], state->score, feq);
+			system(cmd);
+		}
+			break;
+		default:
+			break;
+		}
+	}
+		
+	return 0;
+}
+
+
+
+
+
+
+
+call:
+	HANDLE hKeypro;
+	//hKeypro = CreateThread(NULL, 0, keypro, State, 0, nullptr);
+	//TerminateThread(hKeypro, 0);
+	//CloseHandle(hKeypro);

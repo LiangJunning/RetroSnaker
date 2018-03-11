@@ -37,16 +37,7 @@ int main()
 	CloseHandle(hWnd);*/
 
 	GSettings Settings =
-	{
-		30,
-		90,
-		16,
-		'=',
-		'O',
-		'$',
-		' ',
-		5
-	};
+	{ 15,45,6,'=','O','$',' ',5 };
 	play(Settings);
     return 0;
 }
