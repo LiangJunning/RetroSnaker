@@ -50,6 +50,7 @@ void play(GSettings Settings)
 	system("cls");
 	if(isstart)
 		StartScreen(&Settings);
+	system("cls");
 	isstart = 0;
 	init_snake(&State, Settings);
 	sprintf(cmd, strlist[0], State.score, feq);
@@ -102,7 +103,7 @@ void output(GSettings Settings, CuState State)
 	char cmd[MAX_PATH];
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
-	sprintf(cmd, "mode con cols=%d lines=%d", Settings.b + 2 < MIN_COLS ? 45 : Settings.b + 2, Settings.a + 6 + (int)(strlen(strlist[1]) / (Settings.b + 2)));
+	sprintf(cmd, "mode con cols=%d lines=%d", Settings.b + 3 < MIN_COLS ? 45 : Settings.b + 3, Settings.a + 6 + (int)(strlen(strlist[1]) / (Settings.b + 2)));
 	system(cmd);
 	putnchr(bo, Settings.b + 2);
 	putchar('\n');
