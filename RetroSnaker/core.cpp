@@ -21,13 +21,13 @@ const char *strlist[] =
 {
 	"title 贪吃蛇     得分:%d   每次得分:%2d",//0.title cmd
 	"W:↑ S:↓ A:← D:→ Q:减速 E:加速 点击空格键暂停游戏。          ",//1.runtime tips
-	"W:↑ S:↓ A:← D:→ 点击W、S、A或D控制方向并继续。              ",//2.pause tips
+	"W:↑ S:↓ A:← D:→ 点击W、S、A或D控制前进方向并继续。          ",//2.pause tips
 	"撞墙！游戏结束。                                                ",//3.bump
 	"咬到自己了。游戏结束。                                          ",//4.eat self
 	"您赢了！游戏结束。                                              ",//5.game over
 	"欢迎！\n",//6.Welcome
 	"以下是默认游戏方案:",//7.Start tips
-	"点击回车开始游戏。点击其他任意键选择另一种游戏方案。",//8.Start tips
+	"点击回车开始游戏。点击其他任意键选择另一种游戏方案。\n\n游戏开始后您可以点击W、S、A或D控制前进方向，点击E或Q加速或减速前进。\n具体按键操作如下：\n按键\t作用\nW\t向上前进↑\nS\t向下前进↓\nA\t向左前进←\nD\t向右前进→\nQ\t减速前进\nE\t减速前进",//8.Start tips
 	"请输入您要选择的游戏方案的序号:",//9.select scheme
 	"错误：输入无效！请重试。",//10.Input invalid
 	"得分: %3d\n是否重新开始?(1.是 2.否 3.返回开始屏幕)  请选择：_\b"//11.Game over
